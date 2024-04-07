@@ -131,6 +131,14 @@ Cool! It seems that the darkest blue points (countries with the lowest SDG 5 sco
 #### <span style="color: red;">Challenge 1</span>
 Create a scatterplot using two different SDG scores. Then, color the points by using a third SDG score. In a couple of sentences, describe what you see.
 
+```{r}
+ggplot(data = sdr_data, aes(x = goal_6_score, y = goal_7_score, color = goal_13_score)) +
+  geom_point()
+```
+
+Interpretation: From this graph, it seems like the countries that have low Goal 7 scores (Affordable and Clean Energy) tend to have middle level Goal 6 scores (Clean Water and Sanitation). The countries that have high goal 7 scores also tend to have high goal 6 scores. It is interesting that a lot of the countries that performed poorly between goals 6 & 7 tend to have higher goal 13 scores than the other countries.
+
+
 ### Bar Chart
 
 When should we use a **bar chart**?
@@ -190,6 +198,17 @@ As we can see in the Oceania region, most Countries do not have the necessary da
 #### <span style="color: red;">Challenge 2</span>
 Create a new bar chart with countries only from the MENA region. 
 
+```{r}
+mena_sdr_data <- sdr_data %>% 
+  filter(regions_used_for_the_sdr == "MENA")
+```
+
+```{r}
+ggplot(mena_sdr_data, aes(x = goal_3_score, y = country)) +
+  geom_bar(stat = "identity")
+```
+
+
 ### Histogram
 
 When do we use a **histogram**?
@@ -224,3 +243,10 @@ Countries that fall in the higher end of the Goal 4 spectrum belong to the OECD 
 
 #### <span style="color: red;">Challenge 3</span>
 Make a histogram for a different SDG score. Then, fill by region. In a couple of sentences, describe any interesting trends or what you notice from your new histogram.
+
+```{r}
+ggplot(sdr_data, aes(x = goal_13_score, fill = regions_used_for_the_sdr)) +
+  geom_histogram(bins = 33, color = "black")
+```
+
+In this histogram, it seems that the higher scores for Goal 13 (Climate Action) are dominated by the Sub-Saharan Africa and the LAC regions. The OECD and MENA countries seem to be more spread out, as some performed well, but others did awful.
