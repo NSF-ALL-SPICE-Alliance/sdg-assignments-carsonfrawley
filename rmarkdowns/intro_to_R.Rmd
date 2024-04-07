@@ -11,7 +11,6 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(vembedr)
 ```
 
 
@@ -36,6 +35,11 @@ One of the most helpful tools to an R programmer are R packages! In a nutshell, 
 ```{r}
 library()
 ```
+
+```{r}
+library()
+```
+
 
 A new window should have opened up with a list of packages and a short description! 
 
@@ -108,6 +112,13 @@ my_age + 5 # how old will you be in 5 years?
 #### <span style="color: red;">Challenge 1</span>
 Create a my_name variable with your name assigned to the variable instead of "Victoria DelaCruz". Then, create a my_age variable with your age. 
 
+```{r}
+my_name <- "Carson Frawley"
+
+my_age = 20
+```
+
+
 #### Different Types of Data
 
 Understanding the different types of data is crucial when building out your visualizations and throughout the data analysis process. It is super useful when trying to figure out what graph to use or what story you're trying to tell through your data.
@@ -150,7 +161,7 @@ The [University of Cincinnati](https://uc-r.github.io/introduction) has a great 
 If you want to remove or delete a variable, you can run the following code:
 
 ```{r}
-rm(my_name) # input the variable name in the parenthesis
+rm(my_name) # input the variable name in the parenthesisis
 ```
 
 #### Variables Best Practices
@@ -294,6 +305,12 @@ What if we want to subset specific rows? We can do this by using the filter func
 #### <span style="color: red;">Challenge 2</span>
 Using the `select()` function, select two new SDG goal scores. Assign it to a variable named `SDG_scores`. 
 
+```{r}
+SDG_scores <- sdr_data %>% 
+  select(goal_5_score, goal_6_score)
+```
+
+
 *2. filter()*
 
 Similarly to select, `filter()` can be used to extract specific rows. Let's try this out by filtering our data for those within the Oceania region.
@@ -313,6 +330,12 @@ Notes:
 
 #### <span style="color: red;">Challenge 3</span>
 Using the `filter()` function, filter for another region other than Oceania. Assign it to a variable named `new_region`. 
+
+```{r}
+new_region <- sdr_data %>% 
+  filter(regions_used_for_the_sdr == "Sub-Saharan Africa")
+```
+
 
 **Important**
 
