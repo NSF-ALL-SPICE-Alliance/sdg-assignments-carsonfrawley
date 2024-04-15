@@ -29,6 +29,8 @@ library(ggpubr)
 library(janitor)
 library(ggcorrplot)
 library(vembedr)
+library(ggplot2)
+library(plotly)
 ```
 
 
@@ -197,14 +199,19 @@ To circle back and reinforce how the linear regression (line drawn through our s
   - What does this look like on scatter plot?
   
 ```{r, warning=FALSE, message=FALSE}
-ggplot(sdr_data, aes(x = goal_12_score, 
-                     y = goal_9_score)) +
+goals_12and13_lr <- ggplot(sdr_data, aes(x = goal_12_score, 
+                     y = goal_13_score,
+                     label = country)) +
   geom_point() +
   geom_smooth() +
   stat_cor() +
   theme_minimal() 
 
+ggplotly(goals_12and13_lr)
 ```
+
+Since SDG goals 12 and 13 have a very high correlation, it must be because of how closely related they are to each other. SDG 12 is Responsible Consumption and Production, which has to do with sustainability with consumption, production, and tourism, as well as limiting chemicals and waste. These goals heavily impact the climate, so it makes sense that it has a positive correlation with goal 13, which is Climate Action. There are definitely some points in the bottom left of the graph that don't follow the trend, and some of these countries are Qatar, Brunei Darussalam, United Arab Emirates, Bahrain, and Australia.
+
 
 ### <span style="color: red;">Challenge 1</span>
 
