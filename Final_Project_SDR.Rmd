@@ -1,0 +1,154 @@
+---
+title: "final_project"
+author: "Carson Frawley"
+date: "2024-06-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(janitor)
+library(leaflet)
+library(plotly)
+library(ggplot2)
+library(ggcorrplot)
+library(ggpubr)
+library(naniar)
+library(missRanger)
+library(randomForest)
+```
+
+
+
+```{r}
+sdr_data <- read_csv(here("data/SDR-2023-Data.csv"))
+```
+
+
+
+```{r}
+sdr_data <- sdr_data %>% 
+  clean_names()
+```
+
+
+Viz 1
+
+```{r}
+ggplot(sdr_data, aes(x= goal_1_score, y = country)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~regions_used_for_the_sdr, scales = "free_y") +
+  theme(axis.text.y = element_text(size = 4))
+```
+
+My first visualization breaks down the score of each country's SDG 1 score by region using a bar chart. For context, I am going to be focusing on SDG 1 for my final project, as well as countries in the OECD region. The reason I chose SDG 1 is because it seems to be the most diverse throughout the world, as several contries are doing well and others are struggling. For this graph, I was hoping to see the breakdown of the SDG for each country. However, the map is very messy when it is all together, so I found it helpful to break it down by region. For this particular SDG, it seems that OECD are doing the best and Sub-Saharan Africa is doing the worst. It is hard to tell though because there is lots of missing data, particularly in regions like Oceania and MENA. Also, it seems that the high-income countries overall scored the best on this SDG.
+
+
+
+Viz 2
+
+```{r}
+oecd_sdr_data <- sdr_data %>% 
+  filter(regions_used_for_the_sdr == "OECD")
+```
+
+```{r}
+goal_1_histogram <- ggplot(oecd_sdr_data, aes(x = goal_1_score, fill = country)) +
+  geom_histogram() +
+  theme_minimal() +
+  scale_fill_viridis_d() +
+  labs(title = "Distributions of SDG 1 Scores in OECD",
+       x = "SDG 1 Score",
+       y = "Countries",
+       fill = "Country")
+
+ggplotly(goal_1_histogram)
+```
+
+This visualization is a histogram that distributes the scores of SDG 1 for OECD countries. Most of the countries did very well for this, scoring a score above 90. There were a few outliers, such as Mexico and Colombia, that didn't reach this number. It is important to note that the color coding for each country is done alphabetically, meaning A is dark and Z is light. I originally wanted to organize them so they'd be color coded by their score, but I couldn't get that to work. Even though its not how I originally wanted it, the color coding is fine because it is not the main feature of the graph. It is interactive, so you can hover over each country to see its name and its score for the SDG. I also thought it was very interesting that there were a few countries that acheived a score of 100 for this SDG, which is a great thing to see.
+
+
+
+Viz 3
+
+```{r}
+ggplot(sdr_data, aes(x = goal_1_score, 
+                     y = goal_4_score)) +
+  geom_point() +
+  geom_smooth() +
+  stat_cor() +
+  theme_minimal() 
+```
+
+```{r}
+ggplot(oecd_sdr_data, aes(x = goal_1_score, 
+                     y = goal_4_score)) +
+  geom_point() +
+  geom_smooth() +
+  stat_cor() + 
+  xlim(NA, 101) +
+  ylim(NA, 101) +
+  theme_minimal() 
+```
+
+For my third visualization, I decided to make a linear regression graph for the scores of goal 1 and 4. I chose goal 4 (Quality Education) because when looking at the 17 SDGs, I felt that it would have the highest positive correlation compared to SDG 1 (No Poverty). I decided to make graphs for the entire SDR dataset, as well as the specific countries in OECD. After viewing the graphs, it seems that the graph containing all the SDR data has a pretty high correlation (0.79). The graph definitely has an upward trend. Although, for the graph containing the OECD data, there was not much of a correlation at all. This is because most of the countires in OECD have a high Goal 1 score, but the goal 4 scores are more spread out. There are also a few outliers for this graph that make the correlation the low value it is (0.15). From the looks of it, it seems like the OECD countires take up a lot of the spots in the big group of points on the entire dataset graph.
+
+
+
+Viz 4
+
+```{r}
+sdr_data_normalized_scores <- sdr_data %>% 
+  select(country, contains("normalized_score"))
+```
+
+```{r}
+sdr_data_normalized_scores_longer <- sdr_data_normalized_scores %>% 
+  pivot_longer(cols = !country)
+
+missing_data_by_country <- sdr_data_normalized_scores_longer %>%
+ group_by(country) %>%
+ miss_var_summary() %>% 
+ arrange(desc(pct_miss))
+
+completely_na_countries  <- missing_data_by_country$country[missing_data_by_country$pct_miss == 100]
+
+sdr_data_normalized_scores_no_na_countries <- sdr_data_normalized_scores %>% 
+  filter(!country %in% completely_na_countries)
+
+sdr_data_normalized_scores_less_na <- sdr_data_normalized_scores_no_na_countries %>%
+  select(where(~ sum(is.na(.))/length(.) <= 0.2))
+
+sdr_data_imputed <- missRanger(sdr_data_normalized_scores_less_na)
+```
+
+```{r}
+rf_sdg1 <- randomForest(normalized_score_sdg1_wpc ~ .,
+                             data = sdr_data_imputed,
+                             importance = TRUE)
+rf_sdg1
+```
+
+```{r}
+importance_df <- as.data.frame(rf_sdg1$importance)
+
+importance_df_top_10 <- importance_df %>%
+  rownames_to_column(var = "variable") %>%
+  slice_max(n = 10, order_by = `%IncMSE`)
+```
+
+```{r}
+ggplot(importance_df_top_10, aes(x = `%IncMSE`, y = reorder(variable, `%IncMSE`))) +
+  geom_bar(stat = "identity", fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Top 10 Biggest Factors in Predicting SDG 1 WPC",
+       subtitle = "No Poverty",
+       y = "SDG Indicator",
+       x = "Percent Increase in Mean Squared Error")
+```
+
+In my final visualization, I decided to make a graph showing the top 10 indicators in predicting the WPC (world poverty clock) for SDG 1. The WPC measures how many people are living in extreme poverty and it shows where countries are relative to meeting SDG 1 goals. When looking at the graph, it makes sense that the top predictor for the WPC is the other normalized score relating to no poverty. There are only two indicators for SDG 1 as well, so that means all avaliable made the predicting list. The next score on the list is from SDG 2 (Zero Hunger), and it is undernourishment. This makes very good sense because it is hard for people living below the line of poverty to get access to enough nutritious food, making the two have a very strong correlation. The next one on the list, which is drinking water services from SDG 6, makes sense as well because it is hard for people living in poverty to afford clean drinking water services. The ones that surprised me the most were the last two because I did not think there would be any correlation with climate action and poverty.
+
+
